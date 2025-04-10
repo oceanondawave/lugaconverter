@@ -87,7 +87,7 @@ function App() {
     const formData = new FormData();
     formData.append("file", selectedFile);
 
-    const backendUrl = "http://localhost:5001/process";
+    const backendUrl = "lugaconverter-oceanondawave.ladeapp.com/process";
 
     try {
       const response = await axios.post(backendUrl, formData, {
