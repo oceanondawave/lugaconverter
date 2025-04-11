@@ -248,7 +248,7 @@ function App() {
     const downloadFilename = `${baseName} [lugaconverter].docx`;
     const formData = new FormData();
     formData.append("file", selectedFile);
-    const backendUrl = "/process";
+    const backendUrl = "https://lugaconverter-oceanondawave.ladeapp.com/process";
 
     setIsProcessing(true);
     setMessageKey("uploading");
