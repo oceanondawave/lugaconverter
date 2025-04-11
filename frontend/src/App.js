@@ -45,7 +45,7 @@ const translations = {
     description:
       "Tải lên tệp .docx để chuyển đổi nội dung văn bản từ Unicode NFD sang NFC.",
     authorCredit:
-      "Xin chào, tớ là Ocean Kid, và Luga là cô cậu gái đáng yêu của tớ, cô ấy là người bị suy giảm thị lực. Tớ tạo ra công cụ này để hỗ trợ người bị suy giảm thị lực đọc nội dung từ các tệp .docx, vốn thường gây khó khăn cho các trình đọc màn hình như NVDA khi xử lý vì những văn bản đó sử dụng Unicode NFD thay vì NFC (cậu có thể nghe giải thích ở dưới). Cảm ơn cậu đã sử dụng công cụ này! Liên hệ với tớ tại: minh.ngntri@gmail.com.",
+      "Xin chào, tớ là Ocean Kid, và Luga là cô bạn gái đáng yêu của tớ, cô ấy là người bị suy giảm thị lực. Tớ tạo ra công cụ này để hỗ trợ người bị suy giảm thị lực đọc nội dung từ các tệp .docx, vốn thường gây khó khăn cho các trình đọc màn hình như NVDA khi xử lý vì những văn bản đó sử dụng Unicode NFD thay vì NFC (cậu có thể nghe giải thích ở dưới). Cảm ơn cậu đã sử dụng công cụ này! Liên hệ với tớ tại: minh.ngntri@gmail.com.",
     explanationButtonLabel:
       "Nghe giải thích về Unicode NFD/NFC (chọn để nghe hoặc tạm dừng)",
     warningTitle: "Lưu ý và cách sử dụng:",
