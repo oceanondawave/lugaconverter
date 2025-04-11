@@ -4,14 +4,17 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay, faPause } from "@fortawesome/free-solid-svg-icons";
 
-// --- Translations Object --- (Keep as before)
+// --- Translations Object ---
 const translations = {
   en: {
-    /* ... en translations ... */ title: "Luga Converter",
+    title: "Luga Converter",
     description:
       "Upload a .docx file to convert its text content from Unicode NFD to NFC.",
+    // ---> MODIFIED: Added placeholder and new email key <---
     authorCredit:
-      "Hi there, I am Ocean Kid, and Luga is my lovely girlfriend, she is visually impaired. I created this tool to support visually impaired individuals in reading content from .docx files, which are often difficult for screen readers like NVDA to process because those documents use Unicode NFD instead of NFC (you can listen to the explanation below). Thank you for using this tool! Contact me at: minh.ngntri@gmail.com.",
+      "Hi there, I am Ocean Kid, and Luga is my lovely girlfriend, she is visually impaired. I created this tool to support visually impaired individuals in reading content from .docx files, which are often difficult for screen readers like NVDA to process because those documents use Unicode NFD instead of NFC (you can listen to the explanation below). Thank you for using this tool! Contact me at: {emailLink}.",
+    authorEmail: "minh.ngntri@gmail.com", // New key
+    // --- END MODIFIED ---
     explanationButtonLabel:
       "Listen to the explanation about Unicode NFD/NFC (select to play or pause)",
     warningTitle: "Note and Usage Instructions:",
@@ -25,6 +28,7 @@ const translations = {
       "Please upload a .docx file. Once selected successfully, you’ll hear a confirmation sound. Then click the button to upload and process. After processing, the new file will be automatically downloaded, and you’ll hear another confirmation sound. It’s very fast and fully automated! The new file will include '[lugaconverter]' at the end of its name.",
     warningPoint5:
       "The website may be slow if there are many users accessing it at the same time. Since I'm using a free service, this might happen occasionally — please be patient and try again later!",
+    processWarning: "Choose File to Process",
     languageSelectLabel: "Ngôn ngữ/Language:",
     languageNameVI: "Tiếng Việt",
     languageNameEN: "English",
@@ -41,14 +45,17 @@ const translations = {
     errorResponse: "An error occurred: {error}",
   },
   vi: {
-    /* ... vi translations ... */ title: "Bộ chuyển đổi Luga",
+    title: "Bộ chuyển đổi Luga",
     description:
       "Tải lên tệp .docx để chuyển đổi nội dung văn bản từ Unicode NFD sang NFC.",
+    // ---> MODIFIED: Added placeholder and new email key <---
     authorCredit:
-      "Xin chào, tớ là Ocean Kid, và Luga là cô bạn gái đáng yêu của tớ, cô ấy là người bị suy giảm thị lực. Tớ tạo ra công cụ này để hỗ trợ người bị suy giảm thị lực đọc nội dung từ các tệp .docx, vốn thường gây khó khăn cho các trình đọc màn hình như NVDA khi xử lý vì những văn bản đó sử dụng Unicode NFD thay vì NFC (cậu có thể nghe giải thích ở dưới). Cảm ơn cậu đã sử dụng công cụ này! Liên hệ với tớ tại: minh.ngntri@gmail.com.",
+      "Xin chào, tớ là Ocean Kid, và Luga là cô bạn gái đáng yêu của tớ, cô ấy là người bị suy giảm thị lực. Tớ tạo ra công cụ này để hỗ trợ người bị suy giảm thị lực đọc nội dung từ các tệp .docx, vốn thường gây khó khăn cho các trình đọc màn hình như NVDA khi xử lý vì những văn bản đó sử dụng Unicode NFD thay vì NFC (cậu có thể nghe giải thích ở dưới). Cảm ơn cậu đã sử dụng công cụ này! Liên hệ với tớ tại: {emailLink}.",
+    authorEmail: "minh.ngntri@gmail.com", // New key
+    // --- END MODIFIED ---
     explanationButtonLabel:
       "Nghe giải thích về Unicode NFD/NFC (chọn để nghe hoặc tạm dừng)",
-    warningTitle: "Lưu ý và cách sử dụng:",
+    warningTitle: "Lưu ý và Cách Sử dụng:",
     warningPoint1:
       "Miễn phí, miễn phí, miễn phí và sẽ luôn như vậy. Đây là công cụ hỗ trợ cộng đồng, nếu cậu thấy công cụ nào khác sao chép lại công cụ này của tớ và thu phí, đó không phải bản chính thức và hãy báo cáo ngay cho tớ nhé.",
     warningPoint2:
@@ -59,6 +66,7 @@ const translations = {
       "Hãy tải lên tệp .docx, sau khi chọn thành công cậu sẽ nghe thấy âm thanh xác nhận. Sau đó hãy nhấn nút để tải lên và xử lý. Sau khi xử lý xong tệp mới sẽ được tự động tải về và cậu cũng sẽ nghe âm thanh xác nhận. Tốc độ rất nhanh và hoàn toàn tự động! Tệp mới của cậu sẽ có đuôi '[lugaconverter]' ở tên tệp.",
     warningPoint5:
       "Trang web có thể bị chậm nếu có nhiều người truy cập và sử dụng. Vì tớ sử dụng dịch vụ miễn phí nên điều này hoàn toàn có thể xảy ra - cậu hãy thông cảm và thử lại sau một lúc nhé!",
+    processWarning: "Chọn Tệp để Xử lý",
     languageSelectLabel: "Ngôn ngữ/Language:",
     languageNameVI: "Tiếng Việt",
     languageNameEN: "English",
@@ -76,7 +84,7 @@ const translations = {
   },
 };
 
-// --- Audio Setup ---
+// --- Audio Setup --- (Same as before)
 const uploadSoundEN = new Audio("/uploaded.mp3");
 const completedSoundEN = new Audio("/completed.mp3");
 const uploadSoundVI = new Audio("/uploaded_vi.mp3");
@@ -84,7 +92,7 @@ const completedSoundVI = new Audio("/completed_vi.mp3");
 const explanationSoundEN = new Audio("/explanation.mp3");
 const explanationSoundVI = new Audio("/explanation_vi.mp3");
 
-// Set Volume
+// Set Volume (Same as before)
 uploadSoundEN.volume = 1.0;
 completedSoundEN.volume = 1.0;
 uploadSoundVI.volume = 1.0;
@@ -92,7 +100,7 @@ completedSoundVI.volume = 1.0;
 explanationSoundEN.volume = 1.0;
 explanationSoundVI.volume = 1.0;
 
-// Preload all audio files
+// Preload all audio files (Same as before)
 const usePreloadAudio = () => {
   useEffect(() => {
     uploadSoundEN.load();
@@ -104,18 +112,17 @@ const usePreloadAudio = () => {
   }, []);
 };
 
-// ---> MODIFIED: Reusable function to fully stop (pause AND reset time) explanation sounds <---
+// Function to fully stop explanation sounds (Same as before)
 const stopAndResetExplanationSounds = (setStateCallback) => {
   explanationSoundEN.pause();
   explanationSoundEN.currentTime = 0;
   explanationSoundVI.pause();
   explanationSoundVI.currentTime = 0;
-  if (setStateCallback) {
-    setStateCallback(false);
-  }
+  if (setStateCallback) setStateCallback(false);
 };
 
 function App() {
+  // --- State variables (Same as before) ---
   const [selectedFile, setSelectedFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [messageKey, setMessageKey] = useState("");
@@ -127,8 +134,8 @@ function App() {
 
   usePreloadAudio();
 
+  // Translation helper (Same as before)
   const t = (key, errorDetail = "") => {
-    /* ... translation helper ... */
     let translated =
       translations[language]?.[key] || translations["en"]?.[key] || key;
     if (key === "errorResponse" && errorDetail)
@@ -136,19 +143,16 @@ function App() {
     return translated;
   };
 
-  // ---> REMOVED playSpecificAudio as it's handled directly now <---
-  // ---> MODIFIED: stopSpecificAudio now only pauses (for explanation toggle) <---
+  // Audio pause/stop helpers (Same as before)
   const pauseSpecificAudio = (audioElement) => {
     audioElement.pause();
   };
-
-  // ---> NEW: Fully stop (pause and reset) other sounds <---
   const stopAndResetAudio = (audioElement) => {
     audioElement.pause();
     audioElement.currentTime = 0;
   };
 
-  // Effect to handle explanation finishing naturally
+  // Effect for 'ended' event (Same as before)
   useEffect(() => {
     const handleAudioEnd = () => {
       setIsExplanationPlaying(false);
@@ -161,17 +165,16 @@ function App() {
     };
   }, []);
 
-  // File change handler
+  // File change handler (Same as before)
   const handleFileChange = (event) => {
-    stopAndResetExplanationSounds(setIsExplanationPlaying); // Fully stop explanation
+    stopAndResetExplanationSounds(setIsExplanationPlaying);
     const file = event.target.files[0];
     if (file) {
       setSelectedFile(file);
       setMessageKey("");
       setMessageErrorDetail("");
-      // Play upload sound from beginning
       const uploadSound = language === "vi" ? uploadSoundVI : uploadSoundEN;
-      uploadSound.currentTime = 0; // Ensure it starts from beginning
+      uploadSound.currentTime = 0;
       uploadSound
         .play()
         .catch((e) => console.error("Error playing upload sound:", e));
@@ -182,36 +185,29 @@ function App() {
     }
   };
 
-  // Language change handler
+  // Language change handler (Same as before)
   const handleLanguageChange = (event) => {
-    stopAndResetExplanationSounds(setIsExplanationPlaying); // Fully stop explanation
+    stopAndResetExplanationSounds(setIsExplanationPlaying);
     setLanguage(event.target.value);
     setMessageKey("");
     setMessageErrorDetail("");
   };
 
-  // ---> MODIFIED Explanation Button Handler <---
+  // Explanation button handler (Same as before)
   const handlePlayExplanation = () => {
     const currentExplanationSound =
       language === "vi" ? explanationSoundVI : explanationSoundEN;
     const otherExplanationSound =
       language === "vi" ? explanationSoundEN : explanationSoundVI;
-
     if (isExplanationPlaying) {
-      // --- Pause without resetting time ---
       pauseSpecificAudio(currentExplanationSound);
       setIsExplanationPlaying(false);
     } else {
-      // --- Fully stop other sounds ---
       stopAndResetAudio(uploadSoundEN);
       stopAndResetAudio(completedSoundEN);
       stopAndResetAudio(uploadSoundVI);
       stopAndResetAudio(completedSoundVI);
-      // --- Fully stop the *other* language explanation sound ---
       stopAndResetAudio(otherExplanationSound);
-
-      // --- Resume or play from start ---
-      // The play() method automatically resumes from where it was paused
       currentExplanationSound
         .play()
         .catch((e) => console.error("Error playing explanation:", e));
@@ -219,14 +215,13 @@ function App() {
     }
   };
 
-  // Form submit handler
+  // Form submit handler (Same as before)
   const handleSubmit = async (event) => {
     event.preventDefault();
-    stopAndResetExplanationSounds(setIsExplanationPlaying); // Fully stop explanation
+    stopAndResetExplanationSounds(setIsExplanationPlaying);
     setMessageKey("");
     setMessageErrorDetail("");
 
-    // ... validation ...
     if (!selectedFile) {
       setMessageKey("selectFileFirst");
       setMessageType("danger");
@@ -238,7 +233,6 @@ function App() {
       return;
     }
 
-    // ... filename, form data ...
     const originalFilename = selectedFile.name;
     const lastDotIndex = originalFilename.lastIndexOf(".");
     const baseName =
@@ -248,20 +242,18 @@ function App() {
     const downloadFilename = `${baseName} [lugaconverter].docx`;
     const formData = new FormData();
     formData.append("file", selectedFile);
-
-    const backendUrl = process.env.REACT_APP_BACKEND_URL + "/process";
+    // ---> Use process.env for backend URL <---
+    const backendUrl = (process.env.REACT_APP_BACKEND_URL || "") + "/process"; // Add fallback for safety
 
     setIsProcessing(true);
     setMessageKey("uploading");
     setMessageType("info");
 
     try {
-      // ... axios call ...
       const response = await axios.post(backendUrl, formData, {
         responseType: "blob",
         headers: { "Content-Type": "multipart/form-data" },
       });
-      // ... download logic ...
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -271,10 +263,9 @@ function App() {
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      // Play completion sound from beginning
       const completionSound =
         language === "vi" ? completedSoundVI : completedSoundEN;
-      completionSound.currentTime = 0; // Ensure it starts from beginning
+      completionSound.currentTime = 0;
       completionSound
         .play()
         .catch((e) => console.error("Error playing completion sound:", e));
@@ -284,12 +275,11 @@ function App() {
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
-      // ... error handling ...
       console.error("Error uploading file:", error);
       let errorMsgKey = "errorProcess";
       let detail = "";
       if (error.response && error.response.data) {
-        /* ... error parsing ... */ if (
+        if (
           error.response.data instanceof Blob &&
           error.response.data.type === "application/json"
         ) {
@@ -315,8 +305,32 @@ function App() {
 
   const message = messageKey ? t(messageKey, messageErrorDetail) : "";
 
+  // ---> Function to render author credit with link <---
+  const renderAuthorCredit = () => {
+    const fullText = t("authorCredit");
+    const email = t("authorEmail"); // Assumes 'authorEmail' key exists in translations
+    const placeholder = "{emailLink}"; // The placeholder used in authorCredit string
+    const parts = fullText.split(placeholder);
+
+    if (parts.length === 2 && email) {
+      // Check if email exists too
+      return (
+        <>
+          {parts[0]} {/* Text before placeholder */}
+          <a href={`mailto:${email}`} target="_blank" rel="noopener noreferrer">
+            {email}
+          </a>{" "}
+          {/* Mailto link */}
+          {parts[1]} {/* Text after placeholder */}
+        </>
+      );
+    } else {
+      // Fallback if placeholder or email is missing
+      return fullText;
+    }
+  };
+
   return (
-    // --- JSX Structure Remains the Same ---
     <div className="container mt-5">
       {/* Language Selector */}
       <div className="mb-3 d-flex justify-content-end align-items-center">
@@ -339,7 +353,9 @@ function App() {
       {/* UI Elements */}
       <h1 className="mb-4">{t("title")}</h1>
       <p>{t("description")}</p>
-      <p className="text-success small">{t("authorCredit")}</p>
+
+      {/* ---> MODIFIED: Use renderAuthorCredit function <--- */}
+      <p className="text-success small">{renderAuthorCredit()}</p>
 
       {/* Explanation Button */}
       <div className="text-center my-3">
@@ -371,47 +387,50 @@ function App() {
         </ul>
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="mt-4">
-        <div className="mb-3">
-          <label htmlFor="fileInput" className="form-label">
-            {t("selectFileLabel")}
-          </label>
-          <input
-            type="file"
-            className="form-control"
-            id="fileInput"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            disabled={isProcessing}
-          />
-        </div>
-        {message && (
-          <div className={`alert alert-${messageType}`} role="alert">
-            {message}
+      <div className="alert alert-info mt-3" role="alert">
+        <h4 className="alert-heading">{t("processWarning")}</h4>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="mt-4">
+          <div className="mb-3">
+            <label htmlFor="fileInput" className="form-label">
+              {t("selectFileLabel")}
+            </label>
+            <input
+              type="file"
+              className="form-control"
+              id="fileInput"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              disabled={isProcessing}
+            />
           </div>
-        )}
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={!selectedFile || isProcessing}
-        >
-          {isProcessing ? (
-            <>
-              {" "}
-              <span
-                className="spinner-border spinner-border-sm me-2"
-                role="status"
-                aria-hidden="true"
-              ></span>{" "}
-              {t("processingButton")}{" "}
-            </>
-          ) : (
-            t("submitButton")
+          {message && (
+            <div className={`alert alert-${messageType}`} role="alert">
+              {message}
+            </div>
           )}
-        </button>
-      </form>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={!selectedFile || isProcessing}
+          >
+            {isProcessing ? (
+              <>
+                {" "}
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                ></span>{" "}
+                {t("processingButton")}{" "}
+              </>
+            ) : (
+              t("submitButton")
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
