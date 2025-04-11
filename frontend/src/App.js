@@ -52,7 +52,7 @@ const translations = {
     warningPoint1:
       "Miễn phí, miễn phí, miễn phí và sẽ luôn như vậy. Đây là công cụ hỗ trợ cộng đồng, nếu cậu thấy công cụ nào khác sao chép lại công cụ này của tớ và thu phí, đó không phải bản chính thức và hãy báo cáo ngay cho tớ nhé.",
     warningPoint2:
-      "Chỉ hỗ trợ tệp .docx, cậu không thể tải lên tệp nào có phần mở rộng khác. Nếu cậu thấy tệp .doc của tớ không tải lên được thì hãy lưu lại dưới dạng .docx (như dùng chức năng 'Save As' trong Microsoft Word) sau đó thử tải lên lại nhé.",
+      "Chỉ hỗ trợ tệp .docx, cậu không thể tải lên tệp nào có phần mở rộng khác. Nếu cậu thấy tệp .doc của cậu không tải lên được thì hãy lưu lại dưới dạng .docx (như dùng chức năng 'Save As' trong Microsoft Word) sau đó thử tải lên lại nhé.",
     warningPoint3:
       "Dữ liệu về tệp của cậu tuyệt đối an toàn vì công cụ chỉ xử lý và trả về - tớ hoàn toàn không đọc được và không lưu trữ lại dưới bất kỳ hình thức nào.",
     warningPoint4:
