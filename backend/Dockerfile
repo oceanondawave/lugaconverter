@@ -6,8 +6,8 @@ WORKDIR /app
 
 # Install system dependencies (required for some Python packages)
 RUN apt-get update && apt-get install -y \
-    libmagic1 \  # For file type detection
-    && rm -rf /var/lib/apt/lists/*
+    libmagic1 && \  # For file type detection
+    rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
