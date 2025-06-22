@@ -2,7 +2,7 @@
 FROM python:3.8
 
 # Set the working directory in the container
-WORKDIR /backend
+WORKDIR /app
 
 # Copy the application files into the working directory
 COPY . /backend
@@ -12,3 +12,5 @@ RUN pip install -r requirements.txt
 
 # Define the entry point for the container
 CMD ["flask", "run", "--host=0.0.0.0"]
+
+EXPOSE 8080
