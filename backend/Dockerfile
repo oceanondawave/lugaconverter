@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /backend
 
 # Install the application dependencies
-RUN pip install --upgrade pip requirements.txt
+RUN pip install --upgrade pip -r flask flask-cORS
 
 # Define the entry point for the container
 CMD ["flask", "run", "--host=0.0.0.0"]
