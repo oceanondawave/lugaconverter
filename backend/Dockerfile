@@ -1,16 +1,18 @@
-# Use the official Python image as the base image
-FROM python:3.9
+# Base Image
+FROM python:3.9-slim
 
-# Set the working directory in the container
+# Work directory
 WORKDIR /app
 
-# Copy the application files into the working directory
+# Copy requirements and install dependencies
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+# Copy other project files
 COPY . /backend
 
-# Install the application dependencies
-RUN pip install -r flask-cors
-
-# Define the entry point for the container
-CMD ["flask", "run", "--host=0.0.0.0"]
-
+# Expose a port to Containers 
 EXPOSE 8080
+
+# Command to run on server
+CMD ["flask", "-b", "0.0.0.0:8080", "app:app"]
