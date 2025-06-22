@@ -9,7 +9,7 @@ COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 # Copy other project files
-COPY . /backend
+COPY . .
 
 # Expose a port to Containers 
 EXPOSE 8080
