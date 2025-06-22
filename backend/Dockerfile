@@ -15,4 +15,4 @@ COPY . .
 EXPOSE 8080
 
 # Command to run on server
-CMD ["flask", "run", "0.0.0.0:8080"]
+CMD ["flask", "run", "0.0.0.0:8080", "app:app"]
