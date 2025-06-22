@@ -4,9 +4,9 @@ FROM python:3.9-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies (required for some Python packages)
-RUN apt-get update && apt-get install -y \
-    libmagic1 && \  # For file type detection
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y libmagic1 && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
