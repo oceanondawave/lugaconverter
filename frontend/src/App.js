@@ -89,6 +89,10 @@ const uploadSoundEN = new Audio("/uploaded.mp3");
 const completedSoundEN = new Audio("/completed.mp3");
 const uploadSoundVI = new Audio("/uploaded_vi.mp3");
 const completedSoundVI = new Audio("/completed_vi.mp3");
+const processingSoundEN = new Audio("/processing.mp3");
+const processingSoundVI = new Audio("/processing_vi.mp3");
+const failureSoundEN = new Audio("/failure.mp3");
+const failureSoundVI = new Audio("/failure_vi.mp3");
 const explanationSoundEN = new Audio("/explanation.mp3");
 const explanationSoundVI = new Audio("/explanation_vi.mp3");
 
@@ -97,6 +101,10 @@ uploadSoundEN.volume = 1.0;
 completedSoundEN.volume = 1.0;
 uploadSoundVI.volume = 1.0;
 completedSoundVI.volume = 1.0;
+processingSoundEN.volume = 1.0;
+processingSoundVI.volume = 1.0;
+failureSoundEN.volume = 1.0;
+failureSoundVI.volume = 1.0;
 explanationSoundEN.volume = 1.0;
 explanationSoundVI.volume = 1.0;
 
@@ -109,6 +117,10 @@ const usePreloadAudio = () => {
     completedSoundVI.load();
     explanationSoundEN.load();
     explanationSoundVI.load();
+    processingSoundEN.load();
+    processingSoundVI.load();
+    failureSoundEN.load();
+    failureSoundVI.load();
   }, []);
 };
 
@@ -249,6 +261,14 @@ function App() {
     setMessageKey("uploading");
     setMessageType("info");
 
+    // Processing sound
+    const processingSound =
+      language === "vi" ? processingSoundVI : processingSoundEN;
+    processingSound.currentTime = 0;
+    processingSound
+      .play()
+      .catch((e) => console.error("Error playing processing sound:", e));
+
     try {
       const response = await axios.post(backendUrl, formData, {
         responseType: "blob",
@@ -275,6 +295,13 @@ function App() {
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
+      // Failure sound
+      const failureSound = language === "vi" ? failureSoundVI : failureSoundEN;
+      failureSound.currentTime = 0;
+      failureSound
+        .play()
+        .catch((e) => console.error("Error playing failure sound:", e));
+
       console.error("Error uploading file:", error);
       let errorMsgKey = "errorProcess";
       let detail = "";
