@@ -327,6 +327,8 @@ function App() {
         tag: outTagB64,
       } = response.data.result;
 
+      console.log("Backend response:", response.data);
+
       const decodeBase64 = (b64) =>
         Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
       const outCiphertext = decodeBase64(outCiphertextB64);
@@ -342,6 +344,8 @@ function App() {
         aesKey,
         fullOutput
       );
+
+      console.log("Decrypted buffer length:", decryptedFileBuffer.byteLength);
 
       // 9. Download decrypted docx
       const blob = new Blob([decryptedFileBuffer], {
