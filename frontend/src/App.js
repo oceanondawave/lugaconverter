@@ -306,10 +306,12 @@ function App() {
       const response = await axios.post(
         backendUrl,
         {
-          encrypted_key: encryptedKey, // base64
-          file_ciphertext: btoa(String.fromCharCode(...ciphertext)),
-          file_iv: btoa(String.fromCharCode(...iv)),
-          file_tag: btoa(String.fromCharCode(...tag)),
+          payload: {
+            encrypted_key: encryptedKey, // base64
+            file_ciphertext: btoa(String.fromCharCode(...ciphertext)),
+            file_iv: btoa(String.fromCharCode(...iv)),
+            file_tag: btoa(String.fromCharCode(...tag)),
+          },
         },
         {
           headers: {
