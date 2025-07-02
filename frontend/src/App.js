@@ -22,8 +22,7 @@ const translations = {
       "Free, free, free — and always will be. This is a community-supported tool. If you come across any other tool that copies this one and charges a fee, it's not the official version. Please report it to me immediately.",
     warningPoint2:
       "Only .docx files are supported. You cannot upload files with other extensions. If your .doc file doesn't upload, please save it as a .docx file (for example, using 'Save As' in Microsoft Word) and try uploading again.",
-    warningPoint3:
-      "Your file data is completely secure. The tool only processes and returns the result — I cannot view or store your data in any form.",
+    warningPoint3: "Your file data is encrypted.",
     warningPoint4:
       "Please upload a .docx file. Once selected successfully, you’ll hear a confirmation sound. Then click the button to upload and process. After processing, the new file will be automatically downloaded, and you’ll hear another confirmation sound. It’s very fast and fully automated! The new file will include '[lugaconverter]' at the end of its name.",
     warningPoint5:
@@ -60,8 +59,7 @@ const translations = {
       "Miễn phí, miễn phí, miễn phí và sẽ luôn như vậy. Đây là công cụ hỗ trợ cộng đồng, nếu cậu thấy công cụ nào khác sao chép lại công cụ này của tớ và thu phí, đó không phải bản chính thức và hãy báo cáo ngay cho tớ nhé.",
     warningPoint2:
       "Chỉ hỗ trợ tệp .docx, cậu không thể tải lên tệp nào có phần mở rộng khác. Nếu cậu thấy tệp .doc của cậu không tải lên được thì hãy lưu lại dưới dạng .docx (như dùng chức năng 'Save As' trong Microsoft Word) sau đó thử tải lên lại nhé.",
-    warningPoint3:
-      "Dữ liệu về tệp của cậu tuyệt đối an toàn vì công cụ chỉ xử lý và trả về - tớ hoàn toàn không đọc được và không lưu trữ lại dưới bất kỳ hình thức nào.",
+    warningPoint3: "Dữ liệu về tệp của cậu được mã hoá.",
     warningPoint4:
       "Hãy tải lên tệp .docx, sau khi chọn thành công cậu sẽ nghe thấy âm thanh xác nhận. Sau đó hãy nhấn nút để tải lên và xử lý. Sau khi xử lý xong tệp mới sẽ được tự động tải về và cậu cũng sẽ nghe âm thanh xác nhận. Tốc độ rất nhanh và hoàn toàn tự động! Tệp mới của cậu sẽ có đuôi '[lugaconverter]' ở tên tệp.",
     warningPoint5:
