@@ -318,9 +318,9 @@ function App() {
         }
       );
 
-      const result = response.data.result;
+      const result = response.data; // NOT response.data.result
 
-      console.log("Response result:", result); // confirm this exists
+      console.log("Response result:", result);
 
       if (
         !result ||
