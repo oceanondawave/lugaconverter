@@ -325,10 +325,14 @@ function App() {
         tag: outTagB64,
       } = response.data.result;
 
-      const sanitizeBase64 = (b64) =>
-        b64
+      const sanitizeBase64 = (b64) => {
+        if (typeof b64 !== "string") {
+          throw new Error("Invalid base64 input: not a string");
+        }
+        return b64
           .replace(/[^A-Za-z0-9+/=]/g, "")
           .padEnd(Math.ceil(b64.length / 4) * 4, "=");
+      };
 
       const decodeBase64 = (b64) =>
         Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
