@@ -275,13 +275,11 @@ function App() {
 
       // 3. Encrypt file
       const iv = window.crypto.getRandomValues(new Uint8Array(12)); // 96-bit IV
-
       const encryptedBuffer = await window.crypto.subtle.encrypt(
         { name: "AES-GCM", iv },
         aesKey,
         fileBytes
       );
-
       const encryptedBytes = new Uint8Array(encryptedBuffer);
 
       // 4. Extract ciphertext and tag (last 16 bytes = tag)
@@ -296,17 +294,17 @@ function App() {
       const rawAESKey = await window.crypto.subtle.exportKey("raw", aesKey);
       const rawKeyBytes = new Uint8Array(rawAESKey);
 
-      // 6. Encrypt AES key with RSA public key (must be loaded from server or hardcoded)
+      // 6. Encrypt AES key with RSA public key
       const publicKeyPem = await fetch("/public_key.pem").then((res) =>
         res.text()
-      ); // Replace with your method
-      const encryptedKey = await rsaEncryptAESKey(rawKeyBytes, publicKeyPem);
+      );
+      const encryptedKey = await rsaEncryptAESKey(rawKeyBytes, publicKeyPem); // base64
 
-      // 7. Send encrypted payload
+      // 7. Send encrypted payload to backend
       const response = await axios.post(
         backendUrl,
         {
-          encrypted_key: encryptedKey, // base64
+          encrypted_key: encryptedKey,
           file_ciphertext: btoa(String.fromCharCode(...ciphertext)),
           file_iv: btoa(String.fromCharCode(...iv)),
           file_tag: btoa(String.fromCharCode(...tag)),
@@ -320,20 +318,24 @@ function App() {
         }
       );
 
-      // 8. Decrypt response
+      // 8. Decode and decrypt backend response
       const {
         ciphertext: outCiphertextB64,
         iv: outIvB64,
         tag: outTagB64,
       } = response.data.result;
 
-      console.log("Backend response:", response.data);
+      const sanitizeBase64 = (b64) =>
+        b64
+          .replace(/[^A-Za-z0-9+/=]/g, "")
+          .padEnd(Math.ceil(b64.length / 4) * 4, "=");
 
       const decodeBase64 = (b64) =>
         Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-      const outCiphertext = decodeBase64(outCiphertextB64);
-      const outIv = decodeBase64(outIvB64);
-      const outTag = decodeBase64(outTagB64);
+
+      const outCiphertext = decodeBase64(sanitizeBase64(outCiphertextB64));
+      const outIv = decodeBase64(sanitizeBase64(outIvB64));
+      const outTag = decodeBase64(sanitizeBase64(outTagB64));
 
       const fullOutput = new Uint8Array(outCiphertext.length + outTag.length);
       fullOutput.set(outCiphertext);
@@ -345,9 +347,7 @@ function App() {
         fullOutput
       );
 
-      console.log("Decrypted buffer length:", decryptedFileBuffer.byteLength);
-
-      // 9. Download decrypted docx
+      // 9. Download final DOCX
       const blob = new Blob([decryptedFileBuffer], {
         type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       });
@@ -361,6 +361,7 @@ function App() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
+      // Play completion sound
       const completionSound =
         language === "vi" ? completedSoundVI : completedSoundEN;
       completionSound.currentTime = 0;
