@@ -285,24 +285,39 @@ function App() {
 
       const response = await axios.post(
         backendUrl,
-        { file: base64File },
+        { file_base64: base64File },
         {
-          responseType: "blob",
           headers: {
             "Content-Type": "application/json",
-            // Authorization: `Bearer ${CEREBRIUM_TOKEN}`,
+            Accept: "application/json",
           },
+          responseType: "json",
         }
       );
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const base64 = response.data.result.normalized_file_base64;
+
+      // Decode base64 string to binary data
+      const byteCharacters = atob(base64); // `atob` decodes base64
+      const byteNumbers = Array.from(byteCharacters, (char) =>
+        char.charCodeAt(0)
+      );
+      const byteArray = new Uint8Array(byteNumbers);
+
+      // Create Blob from binary data
+      const blob = new Blob([byteArray], {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+
+      // Create link and download
+      const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", downloadFilename);
+      link.download = downloadFilename;
       document.body.appendChild(link);
       link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       const completionSound =
         language === "vi" ? completedSoundVI : completedSoundEN;
