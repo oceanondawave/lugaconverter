@@ -255,7 +255,6 @@ function App() {
 
     const backendUrl =
       (process.env.REACT_APP_BACKEND_URL || "") + "/process_json";
-    // const CEREBRIUM_TOKEN = process.env.REACT_APP_CEREBRIUM_TOKEN;
 
     setIsProcessing(true);
     setMessageKey("uploading");
@@ -269,13 +268,13 @@ function App() {
       .catch((e) => console.error("Error playing processing sound:", e));
 
     try {
-      // Convert file to base64
+      // 1. Read file as base64
       const toBase64 = (file) =>
         new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.readAsDataURL(file);
           reader.onload = () => {
-            const base64 = reader.result.split(",")[1]; // remove data:<...>;base64, prefix
+            const base64 = reader.result.split(",")[1]; // remove prefix
             resolve(base64);
           };
           reader.onerror = (error) => reject(error);
@@ -283,9 +282,24 @@ function App() {
 
       const base64File = await toBase64(selectedFile);
 
+      // 2. Generate AES-GCM 256-bit key
+      const aesKey = await window.crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+      );
+
+      // 3. Export key as base64
+      const rawKey = await window.crypto.subtle.exportKey("raw", aesKey);
+      const keyBase64 = btoa(String.fromCharCode(...new Uint8Array(rawKey)));
+
+      // 4. Send to backend
       const response = await axios.post(
         backendUrl,
-        { file_base64: base64File },
+        {
+          file_base64: base64File,
+          key_base64: keyBase64,
+        },
         {
           headers: {
             "Content-Type": "application/json",
@@ -295,21 +309,39 @@ function App() {
         }
       );
 
-      const base64 = response.data.result.normalized_file_base64;
+      const { encrypted_file, iv, tag } = response.data.result;
 
-      // Decode base64 string to binary data
-      const byteCharacters = atob(base64); // `atob` decodes base64
-      const byteNumbers = Array.from(byteCharacters, (char) =>
-        char.charCodeAt(0)
+      // 5. Decode base64s to ArrayBuffers
+      const decodeBase64 = (b64) =>
+        Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+
+      const encryptedData = decodeBase64(encrypted_file);
+      const iv_base64 = decodeBase64(iv);
+      const tag_base64 = decodeBase64(tag);
+
+      // 6. Append tag to ciphertext (as expected by SubtleCrypto)
+      const fullCiphertext = new Uint8Array(
+        encryptedData.length + tag_base64.length
       );
-      const byteArray = new Uint8Array(byteNumbers);
+      fullCiphertext.set(encryptedData);
+      fullCiphertext.set(tag_base64, encryptedData.length);
 
-      // Create Blob from binary data
-      const blob = new Blob([byteArray], {
+      // 7. Decrypt
+      const decrypted = await window.crypto.subtle.decrypt(
+        {
+          name: "AES-GCM",
+          iv: iv_base64,
+          tagLength: 128,
+        },
+        aesKey,
+        fullCiphertext
+      );
+
+      // 8. Convert decrypted data to Blob and download
+      const blob = new Blob([decrypted], {
         type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       });
 
-      // Create link and download
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
