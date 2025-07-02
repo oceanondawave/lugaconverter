@@ -1,27 +1,31 @@
-import io
-import os
-import zipfile
-import tempfile
-import shutil
-import unicodedata
-import base64
-import secrets
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import Dict
+import io, os, zipfile, tempfile, shutil, unicodedata, base64, secrets
 
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.backends import default_backend
 
-# Load private RSA key (once at start)
-with open("private_key.pem", "rb") as key_file:
-    PRIVATE_KEY = serialization.load_pem_private_key(
-        key_file.read(),
-        password=None,
-        backend=default_backend()
-    )
+# === Load RSA Private Key ===
+pem_data = base64.b64decode(os.environ["PRIVATE_KEY_BASE64"])
+PRIVATE_KEY = serialization.load_pem_private_key(
+    pem_data,
+    password=None,
+    backend=default_backend()
+)
 
-# === AES-GCM Helpers ===
+# === FastAPI Setup ===
+app = FastAPI()
 
+class Payload(BaseModel):
+    encrypted_key: str
+    file_ciphertext: str
+    file_iv: str
+    file_tag: str
+
+# === AES Decryption ===
 def decrypt_bytes_aes_gcm(ciphertext_b64, iv_b64, tag_b64, key):
     ciphertext = base64.b64decode(ciphertext_b64)
     iv = base64.b64decode(iv_b64)
@@ -35,7 +39,7 @@ def decrypt_bytes_aes_gcm(ciphertext_b64, iv_b64, tag_b64, key):
 
     return decryptor.update(ciphertext) + decryptor.finalize()
 
-
+# === AES Encryption ===
 def encrypt_bytes_aes_gcm(data: bytes, key: bytes) -> dict:
     iv = secrets.token_bytes(12)
     encryptor = Cipher(
@@ -52,8 +56,7 @@ def encrypt_bytes_aes_gcm(data: bytes, key: bytes) -> dict:
         "tag": base64.b64encode(encryptor.tag).decode("utf-8")
     }
 
-# === DOCX Processor ===
-
+# === DOCX Normalization ===
 def process_docx_zip_nfc(input_stream: io.BytesIO) -> bytes:
     temp_dir = tempfile.mkdtemp()
     try:
@@ -84,14 +87,11 @@ def process_docx_zip_nfc(input_stream: io.BytesIO) -> bytes:
     finally:
         shutil.rmtree(temp_dir)
 
-# === Cerebrium entry point ===
-
-def process_json(payload: dict) -> dict:
+# === Actual API Endpoint ===
+@app.post("/process_json")
+def process_json(payload: Payload) -> Dict:
     try:
-        # 1. Decrypt AES key with RSA
-        encrypted_aes_key_b64 = payload["encrypted_key"]
-        encrypted_key = base64.b64decode(encrypted_aes_key_b64)
-
+        encrypted_key = base64.b64decode(payload.encrypted_key)
         aes_key = PRIVATE_KEY.decrypt(
             encrypted_key,
             padding.OAEP(
@@ -101,21 +101,16 @@ def process_json(payload: dict) -> dict:
             )
         )
 
-        if len(aes_key) not in (16, 24, 32):
-            return {"error": "Invalid AES key length."}
-
-        # 2. Decrypt DOCX file using AES key
         decrypted_bytes = decrypt_bytes_aes_gcm(
-            ciphertext_b64=payload["file_ciphertext"],
-            iv_b64=payload["file_iv"],
-            tag_b64=payload["file_tag"],
-            key=aes_key
+            payload.file_ciphertext,
+            payload.file_iv,
+            payload.file_tag,
+            aes_key
         )
 
         input_stream = io.BytesIO(decrypted_bytes)
         processed_bytes = process_docx_zip_nfc(input_stream)
 
-        # 3. Encrypt output (re-use AES key or generate new one)
         encrypted_output = encrypt_bytes_aes_gcm(processed_bytes, aes_key)
 
         return {

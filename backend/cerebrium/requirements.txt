@@ -3,3 +3,5 @@ Flask-Cors
 gunicorn
 requests
 cryptography
+fastapi
+uvicorn
