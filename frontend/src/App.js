@@ -3,6 +3,7 @@ import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay, faPause } from "@fortawesome/free-solid-svg-icons";
+import { rsaEncryptAESKey } from "./cryptoUtils";
 
 // --- Translations Object ---
 const translations = {
@@ -225,7 +226,6 @@ function App() {
     }
   };
 
-  // Form submit handler (Same as before)
   const handleSubmit = async (event) => {
     event.preventDefault();
     stopAndResetExplanationSounds(setIsExplanationPlaying);
@@ -244,11 +244,7 @@ function App() {
     }
 
     const originalFilename = selectedFile.name;
-    const lastDotIndex = originalFilename.lastIndexOf(".");
-    const baseName =
-      lastDotIndex > 0
-        ? originalFilename.substring(0, lastDotIndex)
-        : originalFilename;
+    const baseName = originalFilename.replace(/\.docx$/i, "");
     const downloadFilename = `${baseName} [lugaconverter].docx`;
 
     const backendUrl =
@@ -266,37 +262,54 @@ function App() {
       .catch((e) => console.error("Error playing processing sound:", e));
 
     try {
-      // 1. Read file as base64
-      const toBase64 = (file) =>
-        new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => {
-            const base64 = reader.result.split(",")[1]; // remove prefix
-            resolve(base64);
-          };
-          reader.onerror = (error) => reject(error);
-        });
+      // 1. Read file as ArrayBuffer
+      const fileBuffer = await selectedFile.arrayBuffer();
+      const fileBytes = new Uint8Array(fileBuffer);
 
-      const base64File = await toBase64(selectedFile);
-
-      // 2. Generate AES-GCM 256-bit key
+      // 2. Generate AES-GCM key
       const aesKey = await window.crypto.subtle.generateKey(
         { name: "AES-GCM", length: 256 },
         true,
         ["encrypt", "decrypt"]
       );
 
-      // 3. Export key as base64
-      const rawKey = await window.crypto.subtle.exportKey("raw", aesKey);
-      const keyBase64 = btoa(String.fromCharCode(...new Uint8Array(rawKey)));
+      // 3. Encrypt file
+      const iv = window.crypto.getRandomValues(new Uint8Array(12)); // 96-bit IV
 
-      // 4. Send to backend
+      const encryptedBuffer = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        aesKey,
+        fileBytes
+      );
+
+      const encryptedBytes = new Uint8Array(encryptedBuffer);
+
+      // 4. Extract ciphertext and tag (last 16 bytes = tag)
+      const tagLength = 16;
+      const tag = encryptedBytes.slice(encryptedBytes.length - tagLength);
+      const ciphertext = encryptedBytes.slice(
+        0,
+        encryptedBytes.length - tagLength
+      );
+
+      // 5. Export raw AES key
+      const rawAESKey = await window.crypto.subtle.exportKey("raw", aesKey);
+      const rawKeyBytes = new Uint8Array(rawAESKey);
+
+      // 6. Encrypt AES key with RSA public key (must be loaded from server or hardcoded)
+      const publicKeyPem = await fetch("/public_key.pem").then((res) =>
+        res.text()
+      ); // Replace with your method
+      const encryptedKey = rsaEncryptAESKey(rawKeyBytes, publicKeyPem); // Returns base64
+
+      // 7. Send encrypted payload
       const response = await axios.post(
         backendUrl,
         {
-          file_base64: base64File,
-          key_base64: keyBase64,
+          encrypted_key: encryptedKey, // base64
+          file_ciphertext: btoa(String.fromCharCode(...ciphertext)),
+          file_iv: btoa(String.fromCharCode(...iv)),
+          file_tag: btoa(String.fromCharCode(...tag)),
         },
         {
           headers: {
@@ -307,36 +320,31 @@ function App() {
         }
       );
 
-      const { encrypted_file, iv, tag } = response.data.result;
+      // 8. Decrypt response
+      const {
+        ciphertext: outCiphertextB64,
+        iv: outIvB64,
+        tag: outTagB64,
+      } = response.data.result;
 
-      // 5. Decode base64s to ArrayBuffers
       const decodeBase64 = (b64) =>
         Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const outCiphertext = decodeBase64(outCiphertextB64);
+      const outIv = decodeBase64(outIvB64);
+      const outTag = decodeBase64(outTagB64);
 
-      const encryptedData = decodeBase64(encrypted_file);
-      const iv_base64 = decodeBase64(iv);
-      const tag_base64 = decodeBase64(tag);
+      const fullOutput = new Uint8Array(outCiphertext.length + outTag.length);
+      fullOutput.set(outCiphertext);
+      fullOutput.set(outTag, outCiphertext.length);
 
-      // 6. Append tag to ciphertext (as expected by SubtleCrypto)
-      const fullCiphertext = new Uint8Array(
-        encryptedData.length + tag_base64.length
-      );
-      fullCiphertext.set(encryptedData);
-      fullCiphertext.set(tag_base64, encryptedData.length);
-
-      // 7. Decrypt
-      const decrypted = await window.crypto.subtle.decrypt(
-        {
-          name: "AES-GCM",
-          iv: iv_base64,
-          tagLength: 128,
-        },
+      const decryptedFileBuffer = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: outIv },
         aesKey,
-        fullCiphertext
+        fullOutput
       );
 
-      // 8. Convert decrypted data to Blob and download
-      const blob = new Blob([decrypted], {
+      // 9. Download decrypted docx
+      const blob = new Blob([decryptedFileBuffer], {
         type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       });
 
@@ -361,35 +369,15 @@ function App() {
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
+      console.error("Error uploading file:", error);
+      setMessageKey("errorProcess");
+      setMessageErrorDetail(error.message || "");
+      setMessageType("danger");
       const failureSound = language === "vi" ? failureSoundVI : failureSoundEN;
       failureSound.currentTime = 0;
       failureSound
         .play()
         .catch((e) => console.error("Error playing failure sound:", e));
-
-      console.error("Error uploading file:", error);
-      let errorMsgKey = "errorProcess";
-      let detail = "";
-      if (error.response && error.response.data) {
-        if (
-          error.response.data instanceof Blob &&
-          error.response.data.type === "application/json"
-        ) {
-          try {
-            const errJson = JSON.parse(await error.response.data.text());
-            detail = errJson.error || "";
-            if (detail) errorMsgKey = "errorResponse";
-          } catch (parseError) {}
-        } else if (typeof error.response.data === "object") {
-          detail = error.response.data.error || "";
-          if (detail) errorMsgKey = "errorResponse";
-        }
-      } else if (error.request) {
-        errorMsgKey = "errorConnect";
-      }
-      setMessageKey(errorMsgKey);
-      setMessageErrorDetail(detail);
-      setMessageType("danger");
     } finally {
       setIsProcessing(false);
     }

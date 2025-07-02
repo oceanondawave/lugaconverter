@@ -5,10 +5,54 @@ import tempfile
 import shutil
 import unicodedata
 import base64
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
 import secrets
 
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import serialization, hashes
+
+# Load private RSA key (once at start)
+with open("private_key.pem", "rb") as key_file:
+    PRIVATE_KEY = serialization.load_pem_private_key(
+        key_file.read(),
+        password=None,
+        backend=default_backend()
+    )
+
+# === AES-GCM Helpers ===
+
+def decrypt_bytes_aes_gcm(ciphertext_b64, iv_b64, tag_b64, key):
+    ciphertext = base64.b64decode(ciphertext_b64)
+    iv = base64.b64decode(iv_b64)
+    tag = base64.b64decode(tag_b64)
+
+    decryptor = Cipher(
+        algorithms.AES(key),
+        modes.GCM(iv, tag),
+        backend=default_backend()
+    ).decryptor()
+
+    return decryptor.update(ciphertext) + decryptor.finalize()
+
+
+def encrypt_bytes_aes_gcm(data: bytes, key: bytes) -> dict:
+    iv = secrets.token_bytes(12)
+    encryptor = Cipher(
+        algorithms.AES(key),
+        modes.GCM(iv),
+        backend=default_backend()
+    ).encryptor()
+
+    ciphertext = encryptor.update(data) + encryptor.finalize()
+
+    return {
+        "ciphertext": base64.b64encode(ciphertext).decode("utf-8"),
+        "iv": base64.b64encode(iv).decode("utf-8"),
+        "tag": base64.b64encode(encryptor.tag).decode("utf-8")
+    }
+
+# === DOCX Processor ===
 
 def process_docx_zip_nfc(input_stream: io.BytesIO) -> bytes:
     temp_dir = tempfile.mkdtemp()
@@ -40,41 +84,47 @@ def process_docx_zip_nfc(input_stream: io.BytesIO) -> bytes:
     finally:
         shutil.rmtree(temp_dir)
 
+# === Cerebrium entry point ===
 
-def encrypt_bytes_aes_gcm(data: bytes, key: bytes) -> dict:
-    iv = secrets.token_bytes(12)  # 96-bit nonce
-    encryptor = Cipher(
-        algorithms.AES(key),
-        modes.GCM(iv),
-        backend=default_backend()
-    ).encryptor()
-
-    ciphertext = encryptor.update(data) + encryptor.finalize()
-    return {
-        "iv": base64.b64encode(iv).decode("utf-8"),
-        "ciphertext": base64.b64encode(ciphertext).decode("utf-8"),
-        "tag": base64.b64encode(encryptor.tag).decode("utf-8")
-    }
-
-
-# 🚀 Entry function for Cerebrium
-def process_json(file_base64: str, key_base64: str) -> dict:
+def process_json(payload: dict) -> dict:
     try:
-        file_bytes = base64.b64decode(file_base64)
-        aes_key = base64.b64decode(key_base64)
+        # 1. Decrypt AES key with RSA
+        encrypted_aes_key_b64 = payload["encrypted_key"]
+        encrypted_key = base64.b64decode(encrypted_aes_key_b64)
+
+        aes_key = PRIVATE_KEY.decrypt(
+            encrypted_key,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
 
         if len(aes_key) not in (16, 24, 32):
-            return {"error": "Invalid AES key length. Use 128/192/256 bits."}
+            return {"error": "Invalid AES key length."}
 
-        input_stream = io.BytesIO(file_bytes)
-        output_bytes = process_docx_zip_nfc(input_stream)
+        # 2. Decrypt DOCX file using AES key
+        decrypted_bytes = decrypt_bytes_aes_gcm(
+            ciphertext_b64=payload["file_ciphertext"],
+            iv_b64=payload["file_iv"],
+            tag_b64=payload["file_tag"],
+            key=aes_key
+        )
 
-        encrypted = encrypt_bytes_aes_gcm(output_bytes, aes_key)
+        input_stream = io.BytesIO(decrypted_bytes)
+        processed_bytes = process_docx_zip_nfc(input_stream)
+
+        # 3. Encrypt output (re-use AES key or generate new one)
+        encrypted_output = encrypt_bytes_aes_gcm(processed_bytes, aes_key)
 
         return {
-            "encrypted_file": encrypted["ciphertext"],
-            "iv": encrypted["iv"],
-            "tag": encrypted["tag"]
+            "result": {
+                "ciphertext": encrypted_output["ciphertext"],
+                "iv": encrypted_output["iv"],
+                "tag": encrypted_output["tag"]
+            }
         }
+
     except Exception as e:
         return {"error": str(e)}
