@@ -255,7 +255,7 @@ function App() {
 
     const backendUrl =
       (process.env.REACT_APP_BACKEND_URL || "") + "/process_json";
-    const CEREBRIUM_TOKEN = process.env.REACT_APP_CEREBRIUM_TOKEN;
+    // const CEREBRIUM_TOKEN = process.env.REACT_APP_CEREBRIUM_TOKEN;
 
     setIsProcessing(true);
     setMessageKey("uploading");
@@ -290,7 +290,7 @@ function App() {
           responseType: "blob",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${CEREBRIUM_TOKEN}`,
+            // Authorization: `Bearer ${CEREBRIUM_TOKEN}`,
           },
         }
       );
