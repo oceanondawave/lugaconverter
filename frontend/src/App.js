@@ -252,16 +252,15 @@ function App() {
         ? originalFilename.substring(0, lastDotIndex)
         : originalFilename;
     const downloadFilename = `${baseName} [lugaconverter].docx`;
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    // ---> Use process.env for backend URL <---
-    const backendUrl = (process.env.REACT_APP_BACKEND_URL || "") + "/process"; // Add fallback for safety
+
+    const backendUrl =
+      (process.env.REACT_APP_BACKEND_URL || "") + "/process_json";
+    const CEREBRIUM_TOKEN = process.env.REACT_APP_CEREBRIUM_TOKEN;
 
     setIsProcessing(true);
     setMessageKey("uploading");
     setMessageType("info");
 
-    // Processing sound
     const processingSound =
       language === "vi" ? processingSoundVI : processingSoundEN;
     processingSound.currentTime = 0;
@@ -270,10 +269,32 @@ function App() {
       .catch((e) => console.error("Error playing processing sound:", e));
 
     try {
-      const response = await axios.post(backendUrl, formData, {
-        responseType: "blob",
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      // Convert file to base64
+      const toBase64 = (file) =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => {
+            const base64 = reader.result.split(",")[1]; // remove data:<...>;base64, prefix
+            resolve(base64);
+          };
+          reader.onerror = (error) => reject(error);
+        });
+
+      const base64File = await toBase64(selectedFile);
+
+      const response = await axios.post(
+        backendUrl,
+        { file: base64File },
+        {
+          responseType: "blob",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${CEREBRIUM_TOKEN}`,
+          },
+        }
+      );
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -295,7 +316,6 @@ function App() {
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
-      // Failure sound
       const failureSound = language === "vi" ? failureSoundVI : failureSoundEN;
       failureSound.currentTime = 0;
       failureSound
