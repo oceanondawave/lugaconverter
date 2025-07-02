@@ -318,7 +318,7 @@ function App() {
         }
       );
 
-      const result = response.data; // NOT response.data.result
+      const { result } = response.data;
 
       console.log("Response result:", result);
 
