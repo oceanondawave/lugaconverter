@@ -300,7 +300,7 @@ function App() {
       const publicKeyPem = await fetch("/public_key.pem").then((res) =>
         res.text()
       ); // Replace with your method
-      const encryptedKey = rsaEncryptAESKey(rawKeyBytes, publicKeyPem); // Returns base64
+      const encryptedKey = await rsaEncryptAESKey(rawKeyBytes, publicKeyPem);
 
       // 7. Send encrypted payload
       const response = await axios.post(
