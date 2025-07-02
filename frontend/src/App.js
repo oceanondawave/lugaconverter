@@ -318,18 +318,23 @@ function App() {
         }
       );
 
-      console.log("Response result:", response.data.result);
+      const result = response.data.result;
 
-      // 8. Decode and decrypt backend response
-      const {
-        ciphertext: outCiphertextB64,
-        iv: outIvB64,
-        tag: outTagB64,
-      } = response.data.result || {};
+      console.log("Response result:", result); // confirm this exists
 
-      if (!outCiphertextB64 || !outIvB64 || !outTagB64) {
+      if (
+        !result ||
+        typeof result.ciphertext !== "string" ||
+        typeof result.iv !== "string" ||
+        typeof result.tag !== "string"
+      ) {
+        console.error("Malformed backend response:", result);
         throw new Error("Missing base64 fields in backend response");
       }
+
+      const outCiphertextB64 = result.ciphertext;
+      const outIvB64 = result.iv;
+      const outTagB64 = result.tag;
 
       const sanitizeBase64 = (b64) => {
         if (typeof b64 !== "string") {
