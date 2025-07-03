@@ -321,10 +321,6 @@ function App() {
       const nestedResult = response.data?.result;
       const result = nestedResult?.result || nestedResult;
 
-      console.log("ciphertext:", result.ciphertext);
-      console.log("iv:", result.iv);
-      console.log("tag:", result.tag);
-
       const outCiphertextB64 = result.ciphertext;
       const outIvB64 = result.iv;
       const outTagB64 = result.tag;
