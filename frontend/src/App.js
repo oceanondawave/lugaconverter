@@ -322,15 +322,10 @@ function App() {
 
       console.log("Response result:", result);
 
-      if (
-        !result ||
-        typeof result.ciphertext !== "string" ||
-        typeof result.iv !== "string" ||
-        typeof result.tag !== "string"
-      ) {
-        console.error("Malformed backend response:", result);
-        throw new Error("Missing base64 fields in backend response");
-      }
+      console.log("Checking result fields:");
+      console.log("ciphertext:", result.ciphertext, typeof result.ciphertext);
+      console.log("iv:", result.iv, typeof result.iv);
+      console.log("tag:", result.tag, typeof result.tag);
 
       const outCiphertextB64 = result.ciphertext;
       const outIvB64 = result.iv;
