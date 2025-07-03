@@ -318,14 +318,12 @@ function App() {
         }
       );
 
-      const { result } = response.data;
+      const nestedResult = response.data?.result;
+      const result = nestedResult?.result || nestedResult;
 
-      console.log("Response result:", result);
-
-      console.log("Checking result fields:");
-      console.log("ciphertext:", result.ciphertext, typeof result.ciphertext);
-      console.log("iv:", result.iv, typeof result.iv);
-      console.log("tag:", result.tag, typeof result.tag);
+      console.log("ciphertext:", result.ciphertext);
+      console.log("iv:", result.iv);
+      console.log("tag:", result.tag);
 
       const outCiphertextB64 = result.ciphertext;
       const outIvB64 = result.iv;
