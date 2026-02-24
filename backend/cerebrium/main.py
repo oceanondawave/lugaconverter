@@ -7,19 +7,48 @@ import unicodedata
 import base64
 import secrets
 
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 
+# Initialize FastAPI app
+app = FastAPI(title="Luga Converter API", version="1.0.0")
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Request model
+class ProcessRequest(BaseModel):
+    encrypted_key: str
+    file_ciphertext: str
+    file_iv: str
+    file_tag: str
+
 
 # === Load RSA Private Key from env ===
-pem_data = base64.b64decode(os.environ["PRIVATE_KEY_BASE64"])
-PRIVATE_KEY = serialization.load_pem_private_key(
-    pem_data,
-    password=None,
-    backend=default_backend()
-)
+_PRIVATE_KEY = None
+
+def get_private_key():
+    global _PRIVATE_KEY
+    if _PRIVATE_KEY is None:
+        pem_data = base64.b64decode(os.environ["PRIVATE_KEY_BASE64"])
+        _PRIVATE_KEY = serialization.load_pem_private_key(
+            pem_data,
+            password=None,
+            backend=default_backend()
+        )
+    return _PRIVATE_KEY
 
 
 def process_docx_zip_nfc(input_stream: io.BytesIO) -> bytes:
@@ -51,6 +80,8 @@ def process_docx_zip_nfc(input_stream: io.BytesIO) -> bytes:
         return output_stream.read()
     finally:
         shutil.rmtree(temp_dir)
+    
+    return b""
 
 
 def decrypt_bytes_aes_gcm(ciphertext_b64, iv_b64, tag_b64, key: bytes) -> bytes:
@@ -83,7 +114,7 @@ def encrypt_bytes_aes_gcm(data: bytes, key: bytes) -> dict:
     }
 
 
-# 🚀 Entry point for Cerebrium or other cloud function
+# 🚀 Core processing function
 def process_json(
     encrypted_key: str,
     file_ciphertext: str,
@@ -92,7 +123,8 @@ def process_json(
 ) -> dict:
     try:
         # 1. Decrypt AES key using RSA
-        aes_key = PRIVATE_KEY.decrypt(
+        rsa_key = get_private_key()
+        aes_key = rsa_key.decrypt(
             base64.b64decode(encrypted_key),
             padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
@@ -128,3 +160,34 @@ def process_json(
         }
     except Exception as e:
         return {"error": str(e)}
+
+
+# FastAPI endpoints
+@app.get("/health")
+def health():
+    """Health check endpoint for Cerebrium"""
+    return {"status": "healthy"}
+
+
+@app.get("/ready")
+def ready():
+    """Readiness check endpoint for Cerebrium"""
+    return {"status": "ready"}
+
+
+@app.post("/process_json")
+async def process_json_endpoint(request: ProcessRequest):
+    """
+    Process DOCX file: decrypt, normalize Unicode (NFD to NFC), and re-encrypt.
+    """
+    result = process_json(
+        encrypted_key=request.encrypted_key,
+        file_ciphertext=request.file_ciphertext,
+        file_iv=request.file_iv,
+        file_tag=request.file_tag
+    )
+    
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    
+    return result

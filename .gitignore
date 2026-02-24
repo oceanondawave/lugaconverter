@@ -1,1 +1,9 @@
 ._*
+
+# Private keys - DO NOT COMMIT
+private_key.pem
+private_key_base64.txt
+
+# Environments
+.venv/
+venv/
